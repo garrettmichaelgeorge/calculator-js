@@ -1,8 +1,9 @@
 "use strict";
 
 const OPERATORS = ['+', '-', '*', '/'];
-const btns = document.querySelector('#btn-wrapper').querySelectorAll('button');
-
+const errorListData = {
+  divisionByZero: 'Division by zero is not allowed!',
+}
 const equationData = {
   num0: 0,
   num1: 0,
@@ -20,19 +21,12 @@ const equationData = {
       default:
         return NaN;
     }
-  },
-  isDivisionByZero: function() {
-    return this.operator === '/' && this.num1 === 0;
   }
 };
 
-const errorListData = {
-  divisionByZero: 'Division by zero is not allowed!',
-}
+document.onload = calculator();
 
-document.onload = init();
-
-function init() {
+function calculator() {
   setUpBtnsDigits()
   setUpBtnsOperators();
   setUpBtnClear();
@@ -40,30 +34,33 @@ function init() {
   setUpKeyboardInput();
 
   function setUpBtnsDigits() {
-    const btnsDigits = document.querySelectorAll('.btn-digit');
-    btnsDigits.forEach(btn => {
-      btn.addEventListener('click', e => {
-        const digit = e.target.value;
-        appendToDisplay(digit);
+    document.querySelectorAll('.btn-digit')
+      .forEach(btn => {
+        btn.addEventListener('click', e => {
+          const digit = e.target.value;
+          appendToDisplay(digit);
+        });
       });
-    });
   }
 
   function setUpBtnsOperators(){
-    const btnsOperators = document.querySelectorAll('.btn-operator');
-    btnsOperators.forEach(btn => {
-      btn.addEventListener('click', e => setOperator(e.target.value));
-    });
+    document.querySelectorAll('.btn-operator')
+      .forEach(btn => {
+        btn.addEventListener('click', e => {
+          const operator = e.target.value;
+          setOperator(operator);
+        });
+      });
   }
 
   function setUpBtnClear() {
-    const btnClear = document.querySelector('#btn-clear');
-    btnClear.addEventListener('click', () => clearDisplay());
+    document.querySelector('#btn-clear')
+      .addEventListener('click', () => clearDisplay());
   }
 
   function setUpBtnEquals() {
-    const btnEquals = document.querySelector('#btn-equals');
-    btnEquals.addEventListener('click', e => setEquals());
+    document.querySelector('#btn-equals')
+      .addEventListener('click', e => setEquals());
   }
 
   function setUpKeyboardInput() {
@@ -123,17 +120,7 @@ function clearDisplay() {
   setDisplay("");
 }
 
-function displayError(errorName) {
-  setDisplay(errorList()
-    .find(error => error.name === errorName));
-  display().classList.add('error');
-}
-
 // Data Functions
-function errorList() {
-  return errorListData;
-}
-
 function equation() {
   return equationData;
 }
@@ -154,6 +141,11 @@ function currentNumber() {
   return +display().textContent;
 }
 
+function isOperator(input) {
+  return OPERATORS.includes(input);
+}
+
+// Error Functions
 function errorList() {
   return errorListData;
 }
@@ -162,10 +154,7 @@ function isError() {
   return Object.values(errorList()).includes(display().textContent);
 }
 
-function isOperator(input) {
-  return OPERATORS.includes(input);
-}
-
+// Debugging only
 function debug() {
   console.log(add(3, 4));
   console.log(operate('+', 3, 4));
