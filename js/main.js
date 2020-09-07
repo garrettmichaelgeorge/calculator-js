@@ -3,8 +3,7 @@
 const OPERATORS = ['+', '-', '*', '/'];
 const btns = document.querySelector('#btn-wrapper').querySelectorAll('button');
 
-let displayData = 0;
-let equationData = {
+const equationData = {
   num0: 0,
   num1: 0,
   operator: "",
@@ -21,8 +20,15 @@ let equationData = {
       default:
         return NaN;
     }
+  },
+  isDivisionByZero: function() {
+    return this.operator === '/' && this.num1 === 0;
   }
 };
+
+const errorListData = {
+  divisionByZero: 'Division by zero is not allowed!',
+}
 
 document.onload = init();
 
@@ -31,6 +37,7 @@ function init() {
   setUpBtnsOperators();
   setUpBtnClear();
   setUpBtnEquals();
+  setUpKeyboardInput();
 
   function setUpBtnsDigits() {
     const btnsDigits = document.querySelectorAll('.btn-digit');
@@ -45,12 +52,7 @@ function init() {
   function setUpBtnsOperators(){
     const btnsOperators = document.querySelectorAll('.btn-operator');
     btnsOperators.forEach(btn => {
-      btn.addEventListener('click', e => {
-        const operator = e.target.value;
-        setEquationNum(currentNumber(), 0);
-        setEquationOperator(operator);
-        clearDisplay();
-      });
+      btn.addEventListener('click', e => setOperator(e.target.value));
     });
   }
 
@@ -61,10 +63,29 @@ function init() {
 
   function setUpBtnEquals() {
     const btnEquals = document.querySelector('#btn-equals');
-    btnEquals.addEventListener('click', e => {
-      setEquationNum(currentNumber(), 1)
-      setDisplay(equation().operate());
+    btnEquals.addEventListener('click', e => setEquals());
+  }
+
+  function setUpKeyboardInput() {
+    document.addEventListener('keydown', e => {
+      if (isNumber(e.key)) appendToDisplay(e.key);
+      else if (isOperator(e.key)) setOperator(e.key);
+      else if (isEnter(e.key)) setEquals();
+
+      function isNumber(input) { return input.match(/^[0-9]$/); }
+      function isEnter(input) { return input === 'Enter' }
     });
+  }
+
+  function setOperator(operator) {
+    setEquationOperator(operator);
+    setEquationNum(currentNumber(), 0);
+    clearDisplay();
+  }
+
+  function setEquals() {
+    setEquationNum(currentNumber(), 1)
+    setDisplay(equation().operate());
   }
 }
 
@@ -74,7 +95,11 @@ function subtract(a, b) { return a - b; }
 
 function multiply(a, b) { return a * b; }
 
-function divide(a, b) { return a / b; }
+function divide(a, b) {
+  if (b === 0) return errorList().divisionByZero;
+
+  return a / b;
+}
 
 // Display Functions
 function display() {
@@ -82,10 +107,15 @@ function display() {
 }
 
 function setDisplay(input) {
+  display().classList.remove('error');
   display().textContent = input;
+
+  if (isError()) display().classList.add('error');
 }
 
 function appendToDisplay(input) {
+  if (isError()) clearDisplay();
+
   display().textContent += input;
 }
 
@@ -93,7 +123,17 @@ function clearDisplay() {
   setDisplay("");
 }
 
+function displayError(errorName) {
+  setDisplay(errorList()
+    .find(error => error.name === errorName));
+  display().classList.add('error');
+}
+
 // Data Functions
+function errorList() {
+  return errorListData;
+}
+
 function equation() {
   return equationData;
 }
@@ -108,12 +148,22 @@ function setEquationNum(num, index) {
 
 function setEquationOperator(str) {
   if (isOperator(str)) equation().operator = str;
-
-  function isOperator(input) { return OPERATORS.includes(input); }
 }
 
 function currentNumber() {
   return +display().textContent;
+}
+
+function errorList() {
+  return errorListData;
+}
+
+function isError() {
+  return Object.values(errorList()).includes(display().textContent);
+}
+
+function isOperator(input) {
+  return OPERATORS.includes(input);
 }
 
 function debug() {
