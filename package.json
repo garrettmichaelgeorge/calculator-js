@@ -1,0 +1,22 @@
+{
+  "name": "calculator",
+  "version": "1.0.0",
+  "description": "An HTML-rendered calculator built in vanilla JavaScript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/garrettmichaelgeorge/calculator-js.git"
+  },
+  "author": "Garrett Michael George",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/garrettmichaelgeorge/calculator-js/issues"
+  },
+  "homepage": "https://github.com/garrettmichaelgeorge/calculator-js#readme",
+  "devDependencies": {
+    "eslint": "^7.8.1"
+  }
+}
