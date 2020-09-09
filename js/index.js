@@ -1,170 +1,159 @@
-'use strict';
+'use strict'
 
-const OPERATORS = ['+', '-', '*', '/'];
-const errorListData = {
-  divisionByZero: 'Division by zero is not allowed!',
-}
-const equationData = {
-  num0: 0,
-  num1: 0,
-  operator: "",
-  operate: function() {
-    switch(this.operator) {
+const calculator = (function (doc) {
+  let displayStr = ''
+  const errorListData = {
+    divisionByZero: 'Division by zero is not allowed!'
+  }
+  const equationData = {
+    leftOperand: 0,
+    rightOperand: 0,
+    operator: ''
+  }
+
+  // Cache DOM
+  const calcWrapper = document.querySelector('#calc-wrapper')
+  const display = calcWrapper.querySelector('#display')
+  const btnsDigits = calcWrapper.querySelectorAll('.btn-digit')
+  const btnsOperators = calcWrapper.querySelectorAll('.btn-operator')
+  const btnEquals = calcWrapper.querySelector('#btn-equals')
+  const btnClear = calcWrapper.querySelector('#btn-clear')
+
+  // Bind Events
+  btnsDigits.forEach(btn => {
+    btn.addEventListener('click', e => {
+      addDigit(+e.target.value)
+    })
+  })
+
+  btnsOperators.forEach(btn => {
+    btn.addEventListener('click', e => {
+      setOperator(e.target.value)
+    })
+  })
+
+  btnEquals.addEventListener('click', () => {
+    setRightOperand(displayStr)
+    setDisplayStr(operate())
+  })
+
+  btnClear.addEventListener('click', () => {
+    clearDisplay()
+  })
+
+  document.addEventListener('keydown', e => {
+    routeKeyboardInput(e.key)
+  })
+
+  _render()
+
+  function routeKeyboardInput (key) {
+    if (isNumber(key)) appendToDisplayStr(key)
+    else if (isOperator(key)) setOperator(key)
+    else if (isEnter(key)) setEquals()
+
+    function isNumber (input) { return input.match(/^[0-9]$/) }
+    function isEnter (input) { return input === 'Enter' }
+  }
+
+  function setOperator (operator) {
+    setEquationOperator(operator)
+    setLeftOperand(displayStr)
+    clearDisplay()
+  }
+
+  function addDigit (input) {
+    appendToDisplayStr(input)
+  }
+
+  function operate () {
+    switch (equation().operator) {
       case '+':
-        return add(this.num0, this.num1);
+        return add(equation().leftOperand, equation().rightOperand)
       case '-':
-        return subtract(this.num0, this.num1);
+        return subtract(equation().leftOperand, equation().rightOperand)
       case '*':
-        return multiply(this.num0, this.num1);
+        return multiply(equation().leftOperand, equation().rightOperand)
       case '/':
-        return divide(this.num0, this.num1);
+        return divide(equation().leftOperand, equation().rightOperand)
       default:
-        return NaN;
+        return NaN
     }
   }
-};
 
-document.onload = calculator();
-
-function calculator() {
-  setUpBtnsDigits()
-  setUpBtnsOperators();
-  setUpBtnClear();
-  setUpBtnEquals();
-  setUpKeyboardInput();
-
-  function setUpBtnsDigits() {
-    document.querySelectorAll('.btn-digit')
-      .forEach(btn => {
-        btn.addEventListener('click', e => {
-          const digit = e.target.value;
-          appendToDisplay(digit);
-        });
-      });
+  function add (a, b) {
+    return a + b
   }
 
-  function setUpBtnsOperators(){
-    document.querySelectorAll('.btn-operator')
-      .forEach(btn => {
-        btn.addEventListener('click', e => {
-          const operator = e.target.value;
-          setOperator(operator);
-        });
-      });
+  function subtract (a, b) {
+    return a - b
   }
 
-  function setUpBtnClear() {
-    document.querySelector('#btn-clear')
-      .addEventListener('click', () => clearDisplay());
+  function multiply (a, b) {
+    return a * b
   }
 
-  function setUpBtnEquals() {
-    document.querySelector('#btn-equals')
-      .addEventListener('click', e => setEquals());
+  function divide (a, b) {
+    if (b === 0) return errorList().divisionByZero
+
+    return a / b
   }
 
-  function setUpKeyboardInput() {
-    document.addEventListener('keydown', e => {
-      if (isNumber(e.key)) appendToDisplay(e.key);
-      else if (isOperator(e.key)) setOperator(e.key);
-      else if (isEnter(e.key)) setEquals();
+  // Display Functions
+  function _render () {
+    display.classList.remove('error')
+    display.textContent = displayStr
 
-      function isNumber(input) { return input.match(/^[0-9]$/); }
-      function isEnter(input) { return input === 'Enter' }
-    });
+    if (isError()) display.classList.add('error')
   }
 
-  function setOperator(operator) {
-    setEquationOperator(operator);
-    setEquationNum(currentNumber(), 0);
-    clearDisplay();
+  function setDisplayStr (input) {
+    displayStr = +input
+    _render()
   }
 
-  function setEquals() {
-    setEquationNum(currentNumber(), 1)
-    setDisplay(equation().operate());
+  function appendToDisplayStr (input) {
+    if (isError()) clearDisplay()
+
+    displayStr += input
+    _render()
   }
-}
 
-function add(a, b) { return a + b; }
+  function clearDisplay () {
+    setDisplayStr('')
+    _render()
+  }
 
-function subtract(a, b) { return a - b; }
+  // Data Functions
+  function equation () {
+    return equationData
+  }
 
-function multiply(a, b) { return a * b; }
+  function setRightOperand (num) {
+    equation().rightOperand = num
+  }
 
-function divide(a, b) {
-  if (b === 0) return errorList().divisionByZero;
+  function setLeftOperand (num) {
+    equation().leftOperand = num
+  }
 
-  return a / b;
-}
+  function setEquationOperator (operator) {
+    if (isOperator(operator)) equation().operator = operator
+  }
 
-// Display Functions
-function display() {
-  return document.querySelector('#display');
-}
+  function isOperator (input) {
+    const operators = ['+', '-', '*', '/']
+    return operators.includes(input)
+  }
 
-function setDisplay(input) {
-  display().classList.remove('error');
-  display().textContent = input;
+  // Error Functions
+  function errorList () {
+    return errorListData
+  }
 
-  if (isError()) display().classList.add('error');
-}
+  function isError () {
+    return Object.values(errorList()).includes(display.textContent)
+  }
 
-function appendToDisplay(input) {
-  if (isError()) clearDisplay();
-
-  display().textContent += input;
-}
-
-function clearDisplay() {
-  setDisplay("");
-}
-
-// Data Functions
-function equation() {
-  return equationData;
-}
-
-function setEquationNum(num, index) {
-  if (index !== 0 && index !== 1) return;
-
-  index === 0
-    ? equation().num0 = num
-    : equation().num1 = num;
-}
-
-function setEquationOperator(str) {
-  if (isOperator(str)) equation().operator = str;
-}
-
-function currentNumber() {
-  return +display().textContent;
-}
-
-function isOperator(input) {
-  return OPERATORS.includes(input);
-}
-
-// Error Functions
-function errorList() {
-  return errorListData;
-}
-
-function isError() {
-  return Object.values(errorList()).includes(display().textContent);
-}
-
-// Debugging only
-function debug() {
-  console.log(add(3, 4));
-  console.log(operate('+', 3, 4));
-
-  console.log(subtract(3, 4));
-  console.log(operate('-', 3, 4));
-
-  console.log(multiply(3, 4));
-  console.log(operate('*', 3, 4));
-
-  console.log(divide(3, 4));
-  console.log(operate('/', 3, 4));
-}
+  return { }
+})(document)
